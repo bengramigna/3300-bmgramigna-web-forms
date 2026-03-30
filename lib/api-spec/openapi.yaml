@@ -1,0 +1,222 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: Free Time Survey API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: survey
+    description: Survey operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /survey:
+    post:
+      operationId: submitSurvey
+      tags: [survey]
+      summary: Submit a survey response
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SurveySubmission"
+      responses:
+        "201":
+          description: Survey submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SurveyResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /survey/results:
+    get:
+      operationId: getSurveyResults
+      tags: [survey]
+      summary: Get aggregated survey results
+      responses:
+        "200":
+          description: Aggregated survey results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SurveyResults"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    SurveySubmission:
+      type: object
+      properties:
+        gpa:
+          type: string
+          description: High school GPA
+        state:
+          type: string
+          description: U.S. state the student is from
+        sports:
+          type: array
+          items:
+            type: string
+          description: Sports played in high school
+        restaurants:
+          type: array
+          items:
+            type: string
+          description: Favorite Iowa City restaurants
+        other_restaurant:
+          type: string
+          nullable: true
+          description: Other restaurant if "Other" was selected
+      required:
+        - gpa
+        - state
+        - sports
+        - restaurants
+    SurveyResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        gpa:
+          type: string
+        state:
+          type: string
+        sports:
+          type: array
+          items:
+            type: string
+        restaurants:
+          type: array
+          items:
+            type: string
+        other_restaurant:
+          type: string
+          nullable: true
+      required:
+        - id
+        - created_at
+        - gpa
+        - state
+        - sports
+        - restaurants
+    GpaRange:
+      type: object
+      properties:
+        range:
+          type: string
+        count:
+          type: integer
+      required:
+        - range
+        - count
+    SportCount:
+      type: object
+      properties:
+        sport:
+          type: string
+        count:
+          type: integer
+      required:
+        - sport
+        - count
+    RestaurantCount:
+      type: object
+      properties:
+        restaurant:
+          type: string
+        count:
+          type: integer
+      required:
+        - restaurant
+        - count
+    StateCount:
+      type: object
+      properties:
+        state:
+          type: string
+        count:
+          type: integer
+        percentage:
+          type: number
+      required:
+        - state
+        - count
+        - percentage
+    SurveyResults:
+      type: object
+      properties:
+        total_responses:
+          type: integer
+        gpa_distribution:
+          type: array
+          items:
+            $ref: "#/components/schemas/GpaRange"
+        sports_counts:
+          type: array
+          items:
+            $ref: "#/components/schemas/SportCount"
+        restaurant_counts:
+          type: array
+          items:
+            $ref: "#/components/schemas/RestaurantCount"
+        top_states:
+          type: array
+          items:
+            $ref: "#/components/schemas/StateCount"
+      required:
+        - total_responses
+        - gpa_distribution
+        - sports_counts
+        - restaurant_counts
+        - top_states
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        details:
+          type: string
+          nullable: true
+      required:
+        - error
